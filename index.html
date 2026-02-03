@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eshrahly | منصة اشرحلي</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/tesseract.js@v4.0.0/dist/tesseract.min.js"></script>
+    <style>
+        /* الإعدادات العامة والألوان */
+        :root { --primary-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%); --glass-bg: rgba(255, 255, 255, 0.1); --glass-border: rgba(255, 255, 255, 0.2); --accent-color: #764ba2; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; }
+        body { background: var(--primary-bg); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; color: #fff; overflow-x: hidden; }
+        
+        /* تأثير البطاقة الزجاجية */
+        .glass-card { background: var(--glass-bg); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border: 1px solid var(--glass-border); border-radius: 25px; padding: 40px; width: 100%; max-width: 900px; box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37); animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .hero-section { text-align: center; margin-bottom: 35px; }
+        .hero-section h1 { font-size: 2.8rem; font-weight: 900; margin-bottom: 10px; background: linear-gradient(to right, #fff, #e0e0e0); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        #startBtn { width: 100%; padding: 20px; background: #ffffff; color: var(--accent-color); border: none; border-radius: 15px; font-size: 1.6rem; font-weight: 900; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); margin-top: 10px; }
+        #startBtn:hover { transform: scale(1.02); background: #f8f8f8; }
+        
+        #returnBtn { width: 100%; max-width: 300px; padding: 20px; background: #ffffff; color: var(--accent-color); border: none; border-radius: 15px; font-size: 1.6rem; font-weight: 900; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2); margin: 20px auto 0; display: block; }
+        #returnBtn:hover { transform: scale(1.02); background: #f8f8f8; }
+        
+        .grid-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .option-card { background: rgba(255, 255, 255, 0.07); padding: 30px 15px; border-radius: 20px; text-align: center; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); border: 2px solid transparent; cursor: pointer; }
+        .option-card:hover { transform: translateY(-10px); background: rgba(255, 255, 255, 0.12); }
+        .option-card.active { border: 3px solid #ffffff !important; box-shadow: 0 0 20px rgba(255, 255, 255, 0.4); transform: scale(1.05); }
+
+        .option-card i { font-size: 3rem; display: block; margin-bottom: 15px; font-style: normal; }
+        .option-card h3 { font-size: 1.8rem; margin-bottom: 8px; font-weight: 900; }
+        .option-card p { font-size: 0.9rem; opacity: 0.8; line-height: 1.4; }
+        
+        .stat-card { cursor: default !important; border: 1px solid var(--glass-border) !important; }
+        .stat-card:hover { transform: none !important; }
+
+        .form-container { background: rgba(255, 255, 255, 0.95); padding: 30px; border-radius: 20px; color: #333; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 700; color: #444; }
+        input { width: 100%; padding: 15px; border: 2px solid #eee; border-radius: 12px; font-size: 1rem; outline: none; }
+        input:focus { border-color: #667eea; }
+        .btn-action { width: 100%; padding: 18px; background: var(--accent-color); color: white; border: none; border-radius: 12px; font-size: 1.2rem; font-weight: 700; cursor: pointer; transition: 0.3s; }
+        
+        .page-step { display: none; }
+        #welcomePage { display: block; }
+        
+        .loader { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; }
+        .spinner { width: 60px; height: 60px; border: 6px solid #fff; border-top: 6px solid var(--accent-color); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .payment-details { background: #f0f0f0; padding: 15px; border-radius: 10px; margin-top: 10px; display: none; border-right: 4px solid var(--accent-color); }
+
+        /* --- قسم الآراء يعمل على كل الأجهزة --- */
+        .testimonials-section { margin-top: 40px; border-top: 1px solid var(--glass-border); padding-top: 30px; overflow: hidden; position: relative; width: 100%; }
+        .testimonials-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 20px; text-align: center; color: #eee; }
+        
+        .testimonials-grid { 
+            display: flex; 
+            flex-wrap: nowrap;
+            width: max-content; 
+            gap: 20px; 
+            animation: scrollRTL 25s linear infinite; 
+        }
+
+        .testimonials-grid:hover { animation-play-state: paused; }
+
+        .testimonial-card { 
+            background: rgba(255, 255, 255, 0.05); 
+            padding: 20px; 
+            border-radius: 18px; 
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            width: 320px; 
+            flex-shrink: 0; 
+        }
+
+        .student-meta { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+        .avatar { width: 45px; height: 45px; background: #fff; color: var(--accent-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.2rem; }
+        .stars { color: #ffcc00; font-size: 0.9rem; margin-bottom: 5px; display: block; }
+        .comment-text { font-size: 0.95rem; line-height: 1.6; opacity: 0.9; font-style: italic; white-space: normal; }
+
+        @keyframes scrollRTL {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(50%); } 
+        }
+
+        @media (max-width: 600px) {
+            .hero-section h1 { font-size: 1.8rem; } 
+            .glass-card { padding: 25px 15px; } 
+            .grid-options { grid-template-columns: 1fr 1fr; gap: 10px; } 
+            .testimonial-card { width: 280px; } 
+        }
+    </style>
+</head>
+<body>
+
+<div id="loadingOverlay" class="loader">
+    <div class="spinner"></div>
+    <p>جاري رفع الملفات وإرسال الطلب... ⏳</p>
+</div>
+
+<div id="welcomePage" class="glass-card page-step">
+    <div class="hero-section">
+        <h1>مرحباً بك في اشرحلي 👋</h1>
+        <p>نحول غموض الـ PDF إلى متعة في الفهم ✨</p>
+    </div>
+
+    <div class="grid-options">
+        <div class="option-card stat-card">
+            <i>🎓</i>
+            <h3 class="counter" data-target="500">0</h3>
+            <p>طالب مشترك</p>
+        </div>
+        <div class="option-card stat-card">
+            <i>⭐</i>
+            <h3 class="counter-float" data-target="4.9">0</h3>
+            <p>تقييم الخدمة</p>
+        </div>
+    </div>
+
+    <div class="testimonials-section">
+        <h2 class="testimonials-title">آراء الطلاب المبدعين 💬</h2>
+        <div class="testimonials-grid">
+            <div class="testimonial-card">
+                <div class="student-meta"><div class="avatar">س</div><div><strong>سارة أحمد</strong><span class="stars">⭐⭐⭐⭐⭐</span></div></div>
+                <p class="comment-text">"التلخيص الذكي وفر عليّ ساعات من الدراسة قبل الامتحان، الشرح كان جداً مبسط ومفهوم."</p>
+            </div>
+            <div class="testimonial-card">
+                <div class="student-meta"><div class="avatar">أ</div><div><strong>أحمد الخالدي</strong><span class="stars">⭐⭐⭐⭐⭐</span></div></div>
+                <p class="comment-text">"خدمة حل الأسئلة ساعدتني أفهم طريقة التفكير في الحل مش بس النتيجة النهائية. شكراً لكم!"</p>
+            </div>
+            <div class="testimonial-card">
+                <div class="student-meta"><div class="avatar">م</div><div><strong>محمد علي</strong><span class="stars">⭐⭐⭐⭐⭐</span></div></div>
+                <p class="comment-text">"الخدمة رائعة وسريعة، ساعدتني كثيراً في فهم المواد المعقدة. أوصي بها بشدة!"</p>
+            </div>
+            <div class="testimonial-card">
+                <div class="student-meta"><div class="avatar">س</div><div><strong>سارة أحمد</strong><span class="stars">⭐⭐⭐⭐⭐</span></div></div>
+                <p class="comment-text">"التلخيص الذكي وفر عليّ ساعات من الدراسة قبل الامتحان، الشرح كان جداً مبسط ومفهوم."</p>
+            </div>
+            <div class="testimonial-card">
+                <div class="student-meta"><div class="avatar">أ</div><div><strong>أحمد الخالدي</strong><span class="stars">⭐⭐⭐⭐⭐</span></div></div>
+                <p class="comment-text">"خدمة حل الأسئلة ساعدتني أفهم طريقة التفكير في الحل مش بس النتيجة النهائية. شكراً لكم!"</p>
+            </div>
+            <div class="testimonial-card">
+                <div class="student-meta"><div class="avatar">م</div><div><strong>محمد علي</strong><span class="stars">⭐⭐⭐⭐⭐</span></div></div>
+                <p class="comment-text">"الخدمة رائعة وسريعة، ساعدتني كثيراً في فهم المواد المعقدة. أوصي بها بشدة!"</p>
+            </div>
+        </div>
+    </div>
+
+    <button id="startBtn">ابدأ الآن 🚀</button>
+</div>
+
+<div id="studentInfoPage" class="glass-card page-step">
+    <div class="hero-section"><h1>بيانات التواصل 📝</h1><p>أدخل بياناتك لنتمكن من متابعة طلبك</p></div>
+    <div class="form-container">
+        <div class="form-group"><label>الاسم الكامل</label><input type="text" id="studentName" placeholder="أدخل اسمك هنا..."></div>
+        <div class="form-group"><label>رقم الواتساب</label><input type="tel" id="studentPhone" placeholder="07XXXXXXXX" maxlength="10" pattern="07[7-9][0-9]{7}"></div>
+        <button id="toMajorBtn" class="btn-action">المتابعة لاختيار التخصص ⬅️</button>
+    </div>
+</div>
+
+<div id="majorPage" class="glass-card page-step">
+    <div class="hero-section"><h1>اختر تخصصك الجامعي 📚</h1><p>لنخصص لك خبيراً في مجالك</p></div>
+    <div class="grid-options">
+        <div class="option-card major-box" data-major="تكنولوجيا المعلومات"><i>💻</i><h3>IT</h3><p>برمجة، أمن سيبراني، وشبكات</p></div>
+        <div class="option-card major-box" data-major="الصيدلة"><i>💊</i><h3>الصيدلة</h3><p>كيمياء حيوية وعلم أدوية</p></div>
+        <div class="option-card major-box" data-major="التمريض"><i>🩺</i><h3>التمريض</h3><p>أساسيات التمريض والعلوم الطبية</p></div>
+    </div>
+</div>
+
+<div id="servicePage" class="glass-card page-step">
+    <div class="hero-section"><h1>ما الخدمة المطلوبة؟ 🤔</h1><p>اختر ما يناسب احتياجك الأكاديمي (يمكن اختيار حتى ثلاث)</p></div>
+    <div class="grid-options">
+        <div class="option-card service-box" data-service="شرح صوتي" data-price="5"><i>🎙️</i><h3>شرح صوتي</h3><p>تسجيل صوتي يشرح كل التفاصيل</p></div>
+        <div class="option-card service-box" data-service="تلخيص ذكي" data-price="3"><i>📝</i><h3>تلخيص ذكي</h3><p>تحويل الأوراق الكثيرة لنقاط مركزة</p></div>
+        <div class="option-card service-box" data-service="حل أسئلة" data-price="4"><i>✅</i><h3>حل أسئلة</h3><p>حل الواجبات مع شرح طريقة الحل</p></div>
+    </div>
+    <div class="form-container">
+        <div class="form-group"><label>ارفع ملف الـ PDF 📂</label><input type="file" id="pdfFile" accept=".pdf"></div>
+        <button id="toPaymentBtn" class="btn-action">متابعة للتسعيرة 💰</button>
+    </div>
+</div>
+
+<div id="paymentPage" class="glass-card page-step">
+    <div class="hero-section"><h1>تأكيد الدفع 💳</h1><p id="summaryLabel"></p></div>
+    <div class="form-container">
+        <h2 id="finalPriceDisplay" style="text-align: center; margin-bottom: 25px; color: var(--accent-color); font-size: 2.5rem;"></h2>
+        <div class="grid-options" style="grid-template-columns: 1fr 1fr;">
+            <div class="option-card pay-box" data-method="Visa"><i>💳</i><h3>فيزا / ماستر</h3></div>
+            <div class="option-card pay-box" data-method="CliQ"><i>📱</i><h3>كليك</h3></div>
+        </div>
+        <div id="cliqDetails" class="payment-details">الاسم المستعار: <b>ESHRAHLY</b><br>أو الرقم: <b>079XXXXXXX</b></div>
+        <div id="visaDetails" class="payment-details">سيتم تزويدك برابط دفع آمن عبر الواتساب.</div>
+        <div id="proofArea" style="display:none; margin-top: 20px;">
+            <div class="form-group"><label>ارفق صورة إثبات الدفع (Screenshot) 📸</label><input type="file" id="payScreenshot" accept="image/*"></div>
+            <button id="finishBtn" class="btn-action" disabled>تأكيد الطلب نهائياً ✅</button>
+        </div>
+    </div>
+</div>
+
+<div id="successPage" class="glass-card page-step" style="text-align: center;">
+    <div style="font-size: 5rem; margin-bottom: 20px;">🎉</div>
+    <h1>تم استلام الطلب بنجاح!</h1>
+    <p>لقد وصلتنا ملفاتك وتم استلام طلبك بنجاح. 🏁</p>
+    <button id="returnBtn" onclick="location.reload()">العودة للرئيسية 🏠</button>
+</div>
+
+<script>
+    // --- وظيفة العداد التصاعدي ---
+    function animateCounters() {
+        const counters = document.querySelectorAll('.counter');
+        counters.forEach(counter => {
+            const target = +counter.getAttribute('data-target');
+            let count = 0;
+            const increment = target / 50;
+            const updateCount = () => {
+                if(count < target) {
+                    count += increment;
+                    counter.innerText = Math.ceil(count) + "+";
+                    setTimeout(updateCount, 30);
+                } else { counter.innerText = target + "+"; }
+            };
+            updateCount();
+        });
+
+        const floatCounters = document.querySelectorAll('.counter-float');
+        floatCounters.forEach(counter => {
+            const target = parseFloat(counter.getAttribute('data-target'));
+            let count = 0;
+            const updateCount = () => {
+                if(count < target) {
+                    count += 0.1;
+                    counter.innerText = count.toFixed(1);
+                    setTimeout(updateCount, 40);
+                } else { counter.innerText = target + "/5"; }
+            };
+            updateCount();
+        });
+    }
+
+    // تشغيل العداد عند تحميل الصفحة
+    window.addEventListener('DOMContentLoaded', animateCounters);
+
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwys5r6UrhPyulbUNuVaFb8isGNcP4AZi3b73YDj49R8sq41vrJmGeTD10NpNAX667bkw/exec"; 
+
+    let userData = {
+        name: "", phone: "", major: "", services: [], price: 0, pdfName: "", payMethod: ""
+    };
+
+    function showPage(pageId) {
+        document.getElementById('loadingOverlay').style.display = 'flex';
+        setTimeout(() => {
+            document.querySelectorAll('.page-step').forEach(p => p.style.display = 'none');
+            document.getElementById(pageId).style.display = 'block';
+            document.getElementById('loadingOverlay').style.display = 'none';
+            window.scrollTo(0,0);
+        }, 800);
+    }
+
+    document.getElementById('startBtn').onclick = () => showPage('studentInfoPage');
+
+    document.getElementById('toMajorBtn').onclick = function() {
+        const name = document.getElementById('studentName').value;
+        const phone = document.getElementById('studentPhone').value;
+        const phoneRegex = /^07\d{8}$/;
+        if(!name) { alert("يرجى إدخال الاسم الكامل"); return; }
+        if(!phoneRegex.test(phone)) { alert("يرجى إدخال رقم هاتف صحيح يبدأ بـ 07 ويتكون من 10 أرقام"); return; }
+        userData.name = name; userData.phone = phone;
+        showPage('majorPage');
+    };
+
+    document.querySelectorAll('.major-box').forEach(card => {
+        card.onclick = function() { 
+            document.querySelectorAll('.major-box').forEach(c => c.classList.remove('active'));
+            this.classList.add('active');
+            userData.major = this.dataset.major; 
+            setTimeout(() => showPage('servicePage'), 500);
+        }
+    });
+
+    document.querySelectorAll('.service-box').forEach(card => {
+        card.onclick = function() {
+            const service = this.dataset.service;
+            const price = parseInt(this.dataset.price);
+            const index = userData.services.indexOf(service);
+            if (index > -1) {
+                userData.services.splice(index, 1);
+                userData.price -= price;
+                this.classList.remove('active');
+            } else {
+                if (userData.services.length < 3) {
+                    userData.services.push(service);
+                    userData.price += price;
+                    this.classList.add('active');
+                } else { alert("يمكن اختيار حتى ثلاث خدمات فقط!"); }
+            }
+        }
+    });
+
+    document.getElementById('toPaymentBtn').onclick = function() {
+        const file = document.getElementById('pdfFile').files[0];
+        if(userData.services.length === 0 || !file) { alert("لطفاً اختر خدمة واحدة أو أكثر وارفع ملف الـ PDF"); return; }
+        userData.pdfName = file.name;
+        document.getElementById('summaryLabel').innerText = `يا ${userData.name}، طلبك: تخصص ${userData.major} | خدمات ${userData.services.join(' و ')}`;
+        document.getElementById('finalPriceDisplay').innerText = `${userData.price} دينار`;
+        showPage('paymentPage');
+    };
+
+    document.querySelectorAll('.pay-box').forEach(card => {
+        card.onclick = function() {
+            document.querySelectorAll('.pay-box').forEach(c => c.classList.remove('active'));
+            this.classList.add('active');
+            userData.payMethod = this.dataset.method;
+            document.getElementById('cliqDetails').style.display = (userData.payMethod === 'CliQ') ? 'block' : 'none';
+            document.getElementById('visaDetails').style.display = (userData.payMethod === 'Visa') ? 'block' : 'none';
+            document.getElementById('proofArea').style.display = 'block';
+            document.getElementById('finishBtn').disabled = false;
+        }
+    });
+
+    const fileToBase64 = file => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+    });
+
+    document.getElementById('finishBtn').onclick = async function() {
+        const pdfFile = document.getElementById('pdfFile').files[0];
+        const payFile = document.getElementById('payScreenshot').files[0];
+        if(!pdfFile || !payFile) { alert("يا صديقي، تأكد من اختيار ملف الـ PDF وصورة الدفع أولاً!"); return; }
+
+        document.getElementById('loadingOverlay').style.display = 'flex';
+        document.getElementById('loadingOverlay').querySelector('p').innerText = 'جاري تحليل صورة الإثبات... 🔍';
+
+        try {
+            const { createWorker } = Tesseract;
+            const worker = await createWorker();
+            await worker.loadLanguage('ara+eng');
+            await worker.initialize('ara+eng');
+            const { data: { text } } = await worker.recognize(payFile);
+            await worker.terminate();
+
+            const paymentKeywords = ['دفع', 'تحويل', 'كليك', 'CliQ', 'فيزا', 'Visa', 'ماستر', 'Master', 'إيصال', 'receipt', 'payment', 'transfer'];
+            const isPaymentProof = paymentKeywords.some(keyword => text.toLowerCase().includes(keyword.toLowerCase()));
+
+            if (!isPaymentProof) {
+                alert("الصورة المرفقة لا تبدو كإثبات دفع صحيح. يرجى الدفع أولاً ورفع صورة الإيصال الحقيقي.");
+                document.getElementById('loadingOverlay').style.display = 'none';
+                return;
+            }
+
+            document.getElementById('loadingOverlay').querySelector('p').innerText = 'جاري رفع الملفات وإرسال الطلب... 📤';
+
+            const pdfBase64 = await fileToBase64(pdfFile);
+            const imgBase64 = await fileToBase64(payFile);
+
+            const payload = {
+                name: userData.name, phone: userData.phone, major: userData.major,
+                service: userData.services.join(', '), price: userData.price, payMethod: userData.payMethod,
+                pdfName: pdfFile.name, pdfData: pdfBase64, imgData: imgBase64
+            };
+
+            await fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            // تم إزالة الجزء الخاص بالواتساب من هنا
+            
+            showPage('successPage');
+        } catch (error) {
+            console.error(error);
+            alert("حدث خطأ أثناء تحليل الصورة أو رفع الملفات، يرجى المحاولة مرة أخرى.");
+        } finally {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+    };
+</script>
+
+</body>
+</html>
